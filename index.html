@@ -87,6 +87,14 @@
     background:#2b2b26; color:#fff; padding:12px 18px; border-radius:999px; font-size:14px;
     opacity:0; pointer-events:none; transition:all .25s; z-index:99; max-width:92vw; text-align:center;}
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  #gabyModal{position:fixed; inset:0; background:rgba(20,25,20,.55); display:none; align-items:flex-end; justify-content:center; z-index:60; padding:0;}
+  #gabyModal.show{display:flex;}
+  #gabySheet{background:#fff; border-radius:18px 18px 0 0; width:100%; max-width:560px; max-height:88vh; overflow:auto; padding:18px 16px 26px;}
+  #gabySheet h2{margin:0 0 6px;}
+  #gabySheet textarea{width:100%; min-height:84px; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:14px; font-family:inherit; box-sizing:border-box;}
+  #gabySheet input[type=text]{width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:14px; font-family:inherit; box-sizing:border-box;}
+  #gabySum{font-size:13px; color:var(--mut); margin:8px 0;}
+  #gabySum b{color:var(--ink);}
   .ver-tag{position:fixed; right:10px; bottom:8px; font-size:10px; color:#b9b3a1;}
   @media print{
     header,.card,.ver-tag,#toast{display:none;}
@@ -154,6 +162,9 @@
       <button class="big warn" id="resetBtn"><span id="resetT">🔄 Reiniciar</span><span id="resetSub" style="display:block;font-size:11px;font-weight:400;">borra medidas y dirección · conserva precios</span></button>
       <button class="big primary" id="pdfBtn"><span id="pdfT">📄 PDF del estimado</span></button>
     </div>
+    <div class="btnrow" style="margin-top:10px;">
+      <button class="big" id="gabyBtn" style="border:2px solid var(--green); color:var(--green);"><span id="gabyBtnT"></span></button>
+    </div>
   </div>
 
   <div class="card" id="shareCard">
@@ -169,6 +180,26 @@
 
 <div id="toast"></div>
 <div class="ver-tag" id="verTag">Calculadora Backsplash · v2</div>
+
+<div id="gabyModal">
+  <div id="gabySheet">
+    <h2 id="gabyTitle"></h2>
+    <p class="note" id="gabyNote" style="margin:0 0 8px;"></p>
+    <label class="note" for="gabyClient" style="display:block;margin:10px 0 4px;"><b id="gabyClientL"></b></label>
+    <input type="text" id="gabyClient" autocomplete="off">
+    <label class="note" for="gabyAddr" style="display:block;margin:10px 0 4px;"><b id="gabyAddrL"></b></label>
+    <input type="text" id="gabyAddr" autocomplete="off">
+    <p class="note" style="margin:12px 0 4px;"><b id="gabyWillSend"></b></p>
+    <div id="gabySum"></div>
+    <label class="note" for="gabyComment" style="display:block;margin:10px 0 4px;"><b id="gabyCommentL"></b></label>
+    <textarea id="gabyComment"></textarea>
+    <div class="btnrow" style="margin-top:14px;">
+      <button class="big primary" id="gabySend"><span id="gabySendT"></span></button>
+      <button class="big" id="gabyCopyBtn"><span id="gabyCopyT"></span></button>
+      <button class="big" id="gabyClose"><span id="gabyCloseT"></span></button>
+    </div>
+  </div>
+</div>
 
 <script>
 
@@ -193,7 +224,7 @@ const PDF_DATE_EN="Sep 27 2026"; // English twin — PDD() picks by language
 // ft² = pies lineales × 1.7 · desperdicio 15% · moldura = abiertos×1.8 + estufa×2.8
 function emptySection(){return {l:""};}
 function defaultState(){return {
-  sections:[emptySection()], address:"",
+  sections:[emptySection()], address:"", client:"",
   open:0, stove:0, outlets:0,
   rate:23, openRate:20, stoveRate:25, outletRate:20,
   margin:0, discount:0, tax1:0, tax2:0,
@@ -206,6 +237,7 @@ function normalize(st){
     sections: Array.isArray(st.sections)&&st.sections.length
       ? st.sections.map(s=>({l:s.l===""?"":num(s.l)})) : d.sections,
     address: typeof st.address==="string"?st.address:"",
+    client: typeof st.client==="string"?st.client:"",
     open:g(st.open,0), stove:g(st.stove,0), outlets:g(st.outlets,0),
     rate:g(st.rate,23), openRate:g(st.openRate,20), stoveRate:g(st.stoveRate,25), outletRate:g(st.outletRate,20),
     margin:g(st.margin,0), discount:g(st.discount,0), tax1:g(st.tax1,0), tax2:g(st.tax2,0),
@@ -252,7 +284,22 @@ buyList:"Lista de compra — Backsplash",custBuys:"El cliente compra los materia
 hItem:"Artículo",hQty:"Cantidad",hNote:"Nota",
 toneNote:"Cantidades con desperdicio incluido. Verifica el tono/lote del azulejo antes de comprar.",
 estTitle:"THE HILLCREST COMPANY — ESTIMADO DE BACKSPLASH",
-buyListH:"LISTA DE COMPRA (el cliente compra los materiales):"
+buyListH:"LISTA DE COMPRA (el cliente compra los materiales):",
+gabyBtnT:"📨 Enviar a Gaby",
+gabyTitle:"Enviar a Gaby",
+gabyNote:"Gaby preparará el borrador de la propuesta en DripJobs y lo vinculará al trabajo en CompanyCam. Tú lo revisas y lo envías.",
+gabyWillSend:"Se enviará:",
+gabyClientL:"Nombre del cliente",
+gabyClientPh:"Nombre del cliente…",
+gabyAddrL:"Dirección del proyecto",
+gabyCommentL:"Instrucciones para Gaby (opcional)",
+gabyCommentPh:"Ej. el cliente quiere solo instalación, empezar en octubre…",
+gabySend:"Enviar 📨",
+gabyCopy:"Copiar texto",
+gabyClose:"Cerrar",
+gabyNeedClient:"Agrega el nombre del cliente primero",
+gabyMailOpen:"Abriendo tu app de correo…",
+gabyHandoffCopied:"Texto copiado — pégalo en el chat con Gaby",
 },
 en:{
 appTitle:"Backsplash Calculator",appSub:"Backsplash labor · Customer buys the materials. Your prices stay saved on your phone.",
@@ -283,7 +330,22 @@ buyList:"Purchase list — Backsplash",custBuys:"Customer buys the materials",
 hItem:"Item",hQty:"Quantity",hNote:"Note",
 toneNote:"Quantities include waste. Verify the tile shade/lot before buying.",
 estTitle:"THE HILLCREST COMPANY — BACKSPLASH ESTIMATE",
-buyListH:"PURCHASE LIST (customer buys the materials):"
+buyListH:"PURCHASE LIST (customer buys the materials):",
+gabyBtnT:"📨 Send to Gaby",
+gabyTitle:"Send to Gaby",
+gabyNote:"Gaby will draft the DripJobs proposal and link the CompanyCam job. You review and send.",
+gabyWillSend:"Will send:",
+gabyClientL:"Client name",
+gabyClientPh:"Client name…",
+gabyAddrL:"Project address",
+gabyCommentL:"Instructions for Gaby (optional)",
+gabyCommentPh:"E.g. client wants install only, start in October…",
+gabySend:"Send 📨",
+gabyCopy:"Copy handoff text",
+gabyClose:"Close",
+gabyNeedClient:"Add the client name first",
+gabyMailOpen:"Opening your mail app…",
+gabyHandoffCopied:"Text copied — paste it in the chat with Gaby",
 }};
 function B(es,en){return {es:es,en:en};}
 function nm(x){return (typeof x==="object"&&x)?(x[lang]||x.es):x;}
@@ -293,9 +355,13 @@ function S(id,key){const e=document.getElementById(id);if(e)e.textContent=t(key)
 function applyLang(){
   ["appTitle","appSub","addrH","addrNote","wallsH","detH","detNote","pricesH","sumH","shareH","verTag",
    "lblOpen","lblStove","lblOutlets","rateL","openRateL","stoveRateL","outletRateL",
-   "marginL","discountL","tax1L","tax2L","addSecT","resetT","resetSub","pdfT","copyT","closeT"]
+   "marginL","discountL","tax1L","tax2L","addSecT","resetT","resetSub","pdfT","copyT","closeT",
+   "gabyBtnT","gabyTitle","gabyNote","gabyWillSend","gabyClientL","gabyAddrL","gabyCommentL"]
    .forEach(id=>S(id,id));
+  S("gabySendT","gabySend");S("gabyCopyT","gabyCopy");S("gabyCloseT","gabyClose");
   const ai=document.getElementById("addrInput"); if(ai) ai.placeholder=t("addrPh");
+  const gcl=document.getElementById("gabyClient"); if(gcl) gcl.placeholder=t("gabyClientPh");
+  const gcm=document.getElementById("gabyComment"); if(gcm) gcm.placeholder=t("gabyCommentPh");
   document.getElementById("langEs").classList.toggle("on",lang==="es");
   document.getElementById("langEn").classList.toggle("on",lang==="en");
   renderSections(); renderSummary();
@@ -467,10 +533,96 @@ function initButtons(){
     try{ document.execCommand("copy"); toast(t("copied")); }catch(e){ toast(t("copyManual")); }
   });
   $("closeShare").addEventListener("click",()=>$("shareCard").classList.remove("show"));
+  $("gabyBtn").addEventListener("click",openGabyModal);
+  $("gabyClose").addEventListener("click",()=>$("gabyModal").classList.remove("show"));
+  $("gabyModal").addEventListener("click",e=>{if(e.target===$("gabyModal"))$("gabyModal").classList.remove("show");});
+  $("gabySend").addEventListener("click",sendGabyMail);
+  $("gabyCopyBtn").addEventListener("click",copyGabyText);
   ["openInput|open","stoveInput|stove","outletsInput|outlets",
    "rateInput|rate","openRateInput|openRate","stoveRateInput|stoveRate","outletRateInput|outletRate",
    "marginInput|margin","discountInput|discount","tax1Input|tax1","tax2Input|tax2"
   ].forEach(p=>{ const a=p.split("|"); bindNum(a[0],a[1]); });
+}
+
+/* ================= Enviar a Gaby: traspaso por correo ================= */
+const GABY_MAIL="projects@thehillcrestcompany.com";
+const r2=n=>Math.round(n*100)/100, r1=n=>Math.round(n*10)/10;
+function gabySyncModal(){
+  // Escribe los valores del modal al estado para que el PDF y el traspaso coincidan
+  state.client=($("gabyClient").value||"").trim();
+  state.address=($("gabyAddr").value||"").trim();
+  $("addrInput").value=state.address;
+  save(); renderSummary();
+}
+function buildHandoff(){
+  const c=calc();
+  return {
+    v:1, calc:"backsplash",
+    client:state.client||"",
+    address:state.address||"",
+    date:new Date().toISOString().slice(0,10),
+    lang:lang,
+    inputs:{lf:r1(c.lf),sqft:r1(c.sqft),sqftBuy:r1(c.sqftBuy),open:c.open,stove:c.stove,outlets:c.outlets,trimLF:r1(c.trimLF)},
+    totals:{installOnly:r2(c.a.total),plusGraniteRemoval:r2(c.b.total),fullRemovalPlusDrywall:r2(c.c.total)},
+    comment:($("gabyComment").value||"").trim()
+  };
+}
+function handoffSubject(d){
+  return "[Backsplash-Gaby] "+(d.client||"")+(d.address?" — "+d.address:"");
+}
+function handoffBody(d){
+  const lines=[];
+  lines.push((lang==="es"?"Cliente":"Client")+": "+(d.client||"—"));
+  if(d.address)lines.push((lang==="es"?"Dirección":"Address")+": "+d.address);
+  lines.push((lang==="es"?"Fecha":"Date")+": "+d.date);
+  lines.push((lang==="es"?"Medidas":"Measurements")+": "+d.inputs.lf+" ft / "+d.inputs.sqft+" ft²");
+  lines.push("");
+  lines.push(lang==="es"?"TOTALES:":"TOTALS:");
+  lines.push("  installOnly: "+fmt(d.totals.installOnly));
+  lines.push("  plusGraniteRemoval: "+fmt(d.totals.plusGraniteRemoval));
+  lines.push("  fullRemovalPlusDrywall: "+fmt(d.totals.fullRemovalPlusDrywall));
+  if(d.comment){lines.push("");lines.push((lang==="es"?"Instrucciones":"Instructions")+": "+d.comment);}
+  lines.push("");
+  lines.push("---BEGIN-BACKSPLASH-DATA---");
+  lines.push(JSON.stringify(d));
+  lines.push("---END-BACKSPLASH-DATA---");
+  return lines.join("\n");
+}
+function openGabyModal(){
+  $("gabyClient").value=state.client||"";
+  $("gabyAddr").value=state.address||"";
+  const d=buildHandoff();
+  $("gabySum").innerHTML=
+    "<b>"+esc(d.client||"—")+"</b>"+(d.address?" · "+esc(d.address):"")+
+    " · "+d.inputs.lf+" ft / "+d.inputs.sqft+" ft²<br>"+
+    "<b>"+nm(SCEN_NAMES[0])+"</b>: "+fmt(d.totals.installOnly)+" · "+
+    "<b>"+nm(SCEN_NAMES[1])+"</b>: "+fmt(d.totals.plusGraniteRemoval)+" · "+
+    "<b>"+nm(SCEN_NAMES[2])+"</b>: "+fmt(d.totals.fullRemovalPlusDrywall);
+  $("gabyModal").classList.add("show");
+}
+function sendGabyMail(){
+  gabySyncModal();
+  if(!(state.client||"").trim()){toast(t("gabyNeedClient"));return;}
+  const d=buildHandoff();
+  const href="mailto:"+GABY_MAIL+"?subject="+encodeURIComponent(handoffSubject(d))+"&body="+encodeURIComponent(handoffBody(d));
+  toast(t("gabyMailOpen"));
+  const a=document.createElement("a");a.href=href;a.style.display="none";
+  document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);
+  setTimeout(()=>$("gabyModal").classList.remove("show"),800);
+}
+function copyGabyText(){
+  gabySyncModal();
+  const d=buildHandoff();
+  const txt=handoffSubject(d)+"\n\n"+handoffBody(d);
+  const done=()=>toast(t("gabyHandoffCopied"));
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));}
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");done();}catch(e){toast(t("copyManual"));}
+  ta.remove();
 }
 
 /* ================= PDF del estimado (2 páginas horizontales) ================= */
