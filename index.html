@@ -189,7 +189,7 @@ function emptySection(){return {l:""};}
 function defaultState(){return {
   sections:[emptySection()], address:"",
   open:0, stove:0, outlets:0,
-  rate:23, openRate:20, stoveRate:25, outletRate:25,
+  rate:23, openRate:20, stoveRate:25, outletRate:20,
   margin:0, discount:0, tax1:0, tax2:0
 };}
 function normalize(st){
@@ -200,7 +200,7 @@ function normalize(st){
       ? st.sections.map(s=>({l:s.l===""?"":num(s.l)})) : d.sections,
     address: typeof st.address==="string"?st.address:"",
     open:g(st.open,0), stove:g(st.stove,0), outlets:g(st.outlets,0),
-    rate:g(st.rate,23), openRate:g(st.openRate,20), stoveRate:g(st.stoveRate,25), outletRate:g(st.outletRate,25),
+    rate:g(st.rate,23), openRate:g(st.openRate,20), stoveRate:g(st.stoveRate,25), outletRate:g(st.outletRate,20),
     margin:g(st.margin,0), discount:g(st.discount,0), tax1:g(st.tax1,0), tax2:g(st.tax2,0)
   };
 }
