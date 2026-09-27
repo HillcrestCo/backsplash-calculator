@@ -113,6 +113,8 @@
 <main>
   <div class="card">
     <h2 id="addrH">📍 Dirección del proyecto</h2>
+    <label class="note" for="clientInput" style="display:block;margin:0 0 4px;"><b id="clientH"></b></label>
+    <input type="text" id="clientInput" placeholder="Nombre del cliente…" autocomplete="off">
     <div class="addr-wrap">
       <input type="text" id="addrInput" placeholder="Empieza a escribir la dirección…" autocomplete="off">
       <div class="addr-list" id="addrList"></div>
@@ -257,7 +259,7 @@ const PDD=()=>lang==="en"?PDF_DATE_EN:PDF_DATE;
 const STRINGS={
 es:{
 appTitle:"Calculadora de Backsplash",appSub:"Mano de obra de backsplash · El cliente compra los materiales. Tus precios se guardan en tu teléfono.",
-addrH:"📍 Dirección del proyecto",addrPh:"Empieza a escribir la dirección…",addrNote:"Toca una sugerencia para usarla. Sale en el PDF del estimado.",
+addrH:"📍 Dirección del proyecto",addrPh:"Empieza a escribir la dirección…",addrNote:"Toca una sugerencia para usarla. Sale en el PDF del estimado.",clientH:"👤 Nombre del cliente",clientPh:"Nombre del cliente…",
 wallsH:"📐 Paredes (pies lineales)",addSecT:"＋ Agregar otra pared",wallsNote:"Solo el largo de cada pared. El área se calcula × 1.7 ft de alto, como en tu hoja.",
 detH:"🧮 Detalles",lblOpen:"Lados abiertos",lblStove:"Bordes estufa / micro",lblOutlets:"Outlets (cortes)",
 detNote:"Lados abiertos: bordes expuestos del azulejo. Estufa/micro: bordes contra la estufa o el microondas.",
@@ -303,7 +305,7 @@ gabyHandoffCopied:"Texto copiado — pégalo en el chat con Gaby",
 },
 en:{
 appTitle:"Backsplash Calculator",appSub:"Backsplash labor · Customer buys the materials. Your prices stay saved on your phone.",
-addrH:"📍 Project address",addrPh:"Start typing the address…",addrNote:"Tap a suggestion to use it. It appears on the estimate PDF.",
+addrH:"📍 Project address",addrPh:"Start typing the address…",addrNote:"Tap a suggestion to use it. It appears on the estimate PDF.",clientH:"👤 Client name",clientPh:"Client name…",
 wallsH:"📐 Walls (linear feet)",addSecT:"＋ Add another wall",wallsNote:"Just each wall's length. Area is calculated × 1.7 ft high, like your sheet.",
 detH:"🧮 Details",lblOpen:"Open sides",lblStove:"Stove / microwave edges",lblOutlets:"Outlets (cutouts)",
 detNote:"Open sides: exposed tile edges. Stove/micro: edges against the stove or microwave.",
@@ -353,13 +355,14 @@ function t(k){const d=STRINGS[lang]||STRINGS.es;return d[k]!==undefined?d[k]:STR
 function setLang(l){lang=l;state.lang=l;save();applyLang();}
 function S(id,key){const e=document.getElementById(id);if(e)e.textContent=t(key);}
 function applyLang(){
-  ["appTitle","appSub","addrH","addrNote","wallsH","detH","detNote","pricesH","sumH","shareH","verTag",
+  ["appTitle","appSub","addrH","clientH","addrNote","wallsH","detH","detNote","pricesH","sumH","shareH","verTag",
    "lblOpen","lblStove","lblOutlets","rateL","openRateL","stoveRateL","outletRateL",
    "marginL","discountL","tax1L","tax2L","addSecT","resetT","resetSub","pdfT","copyT","closeT",
    "gabyBtnT","gabyTitle","gabyNote","gabyWillSend","gabyClientL","gabyAddrL","gabyCommentL"]
    .forEach(id=>S(id,id));
   S("gabySendT","gabySend");S("gabyCopyT","gabyCopy");S("gabyCloseT","gabyClose");
   const ai=document.getElementById("addrInput"); if(ai) ai.placeholder=t("addrPh");
+  const ci=document.getElementById("clientInput"); if(ci){ ci.placeholder=t("clientPh"); }
   const gcl=document.getElementById("gabyClient"); if(gcl) gcl.placeholder=t("gabyClientPh");
   const gcm=document.getElementById("gabyComment"); if(gcm) gcm.placeholder=t("gabyCommentPh");
   document.getElementById("langEs").classList.toggle("on",lang==="es");
@@ -468,6 +471,13 @@ function syncInputs(){
   $("tax2Input").value=state.tax2||0;
 }
 
+/* ================= Nombre del cliente ================= */
+function initClient(){
+  const ci=$("clientInput");
+  ci.value=state.client||"";
+  ci.addEventListener("input",()=>{ state.client=ci.value; save(); });
+}
+
 /* ================= Dirección (autocompletado) ================= */
 let addrTimer=null;
 function initAddress(){
@@ -521,8 +531,8 @@ function initButtons(){
   // REINICIAR: borra medidas, conteos y dirección; conserva precios y ajustes
   $("resetBtn").addEventListener("click",()=>{
     state.sections=[emptySection()];
-    state.address=""; state.open=""; state.stove=""; state.outlets="";
-    $("addrInput").value="";
+    state.address=""; state.open=""; state.stove=""; state.outlets=""; state.client="";
+    $("addrInput").value=""; $("clientInput").value="";
     $("addrList").classList.remove("show");
     save(); syncInputs(); renderAll();
     toast(t("resetMsg"));
@@ -552,6 +562,7 @@ function gabySyncModal(){
   state.client=($("gabyClient").value||"").trim();
   state.address=($("gabyAddr").value||"").trim();
   $("addrInput").value=state.address;
+  $("clientInput").value=state.client;
   save(); renderSummary();
 }
 function buildHandoff(){
@@ -782,6 +793,7 @@ async function sharePdf(){
 /* ================= Inicio ================= */
 renderAll();
 initAddress();
+initClient();
 initButtons();
 syncInputs();
 document.getElementById("langEs").addEventListener("click",()=>setLang("es"));
