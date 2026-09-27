@@ -188,6 +188,7 @@ const LOGO_BIN=atob(LOGO_JPG_B64); // bytes Latin-1 del JPEG, 1 char = 1 byte
 /* ================= Datos / estado ================= */
 const LS_KEY="backsplashCalc2";
 const PDF_DATE="27 sep 2026";
+const PDF_DATE_EN="Sep 27 2026"; // English twin — PDD() picks by language
 // Lógica de la hoja "Backsplash Labor Cost Calculator":
 // ft² = pies lineales × 1.7 · desperdicio 15% · moldura = abiertos×1.8 + estufa×2.8
 function emptySection(){return {l:""};}
@@ -220,6 +221,7 @@ let state=loadState();
 function save(){ try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){} }
 /* ================= Idioma ES/EN ================= */
 let lang=state.lang||"es";
+const PDD=()=>lang==="en"?PDF_DATE_EN:PDF_DATE;
 const STRINGS={
 es:{
 appTitle:"Calculadora de Backsplash",appSub:"Mano de obra de backsplash · El cliente compra los materiales. Tus precios se guardan en tu teléfono.",
@@ -489,7 +491,7 @@ function buildEstimatePdf(){
   T(P1,36,542,t("pdfTitle"),11,true,DARK);
   let yInfo=526, yGold=518, cardTop=492;
   if(addr){ T(P1,36,526,t("projLabel")+addr,10,true,DARK); yInfo=510; yGold=502; cardTop=476; }
-  T(P1,36,yInfo,t("lfLabel")+": "+c.lf.toFixed(1)+" · "+t("areaLabel")+": "+c.sqft.toFixed(1)+" ft² · "+t("dateLabel")+": "+PDF_DATE,9,false,GRAY);
+  T(P1,36,yInfo,t("lfLabel")+": "+c.lf.toFixed(1)+" · "+t("areaLabel")+": "+c.sqft.toFixed(1)+" ft² · "+t("dateLabel")+": "+PDD(),9,false,GRAY);
   rect(P1,36,yGold,720,2.5,GOLD);
   sc.forEach((s,i)=>{
     const x=36+i*248, w=232, top=cardTop, h=330;
@@ -520,7 +522,7 @@ function buildEstimatePdf(){
   // ===== Página 2: lista de compra =====
   P2.s+="q 120 0 0 25.9 636 566 cm /Im1 Do Q\n";
   T(P2,36,574,t("buyList"),14,true,DARK);
-  T(P2,36,558,(addr?(t("projLabel")+addr+" · "):"")+t("custBuys")+" · "+PDF_DATE,9,false,GRAY);
+  T(P2,36,558,(addr?(t("projLabel")+addr+" · "):"")+t("custBuys")+" · "+PDD(),9,false,GRAY);
   const c2x=[36,330,470], h2=[t("hItem"),t("hQty"),t("hNote")];
   let y2=528;
   rect(P2,36,y2-6,720,20,GREEN);
